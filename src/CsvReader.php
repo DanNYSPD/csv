@@ -2,8 +2,9 @@
 namespace Xarenisfot\Csv;
 
 use Exception;
+use League\Event\Emitter;
 use Xarenisfot\Csv\Events\RowRead;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+
 /**
  * @author Daniel Hernandez Fco <daniel.hernandez.job@gmail.com>
  * 
@@ -16,19 +17,21 @@ class CsvReader {
     public $offset=-1;
     public $delimiter=',';
     public $limit=-1;
+  
     /**
-     * Undocumented variable
+     * emitter Property
      *
-     * @var EventDispatcher
+     * @var Emitter
      */
-    protected $dispatcher;
+    protected $emitter; 
 
-    public function __construct(){
-        $this->dispatcher = new EventDispatcher();
+    public function __construct(){        
+        $this->emitter = new Emitter;
     }
     public function addListener($callable){
-        $this->dispatcher->addListener('row.read',$callable);
+        $this->emitter-> addListener(RowRead::NAME, $callable);
     }
+    
     public  function readCSVReturn(string $csvFilePath,callable $rowReaderObject=null)
     {
         $arrObjects=[];
@@ -74,7 +77,7 @@ class CsvReader {
                   $rowRead->data=$data;
                   
               }
-              $this->dispatcher->dispatch($rowRead,RowRead::NAME);
+              $this->emitter->emit($rowRead);
               $row++;
             }
             fclose($handle);
