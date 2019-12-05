@@ -21,7 +21,7 @@ class CsvReader {
      *
      * @var EventDispatcher
      */
-    public $dispatcher;
+    protected $dispatcher;
 
     public function __construct(){
         $this->dispatcher = new EventDispatcher();
