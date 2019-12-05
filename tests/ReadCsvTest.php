@@ -2,6 +2,7 @@
 
 use Xarenisfot\Csv\CsvReader;
 use PHPUnit\Framework\TestCase;
+use Xarenisfot\Csv\Events\RowRead;
 class Person{
     public $name;
     public $lastName;
@@ -50,6 +51,11 @@ final class ReadCsvTest extends TestCase {
         $reader= new CsvReader();
         $reader->columnsNumber=4;
         $reader->offset=1;
+        $reader->addListener(function(RowRead $evt){
+            echo "$evt->index";
+            echo "\n";
+            print_r ($evt->data);
+        });
         $data= $reader->readCSVReturn(__DIR__."/assets/sample.csv",function($data,$columnsNumber,$rowNumber){
             $p=new Person();
             $p->name=$data[0];

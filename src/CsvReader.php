@@ -2,6 +2,8 @@
 namespace Xarenisfot\Csv;
 
 use Exception;
+use Xarenisfot\Csv\Events\RowRead;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 /**
  * @author Daniel Hernandez Fco <daniel.hernandez.job@gmail.com>
  * 
@@ -14,8 +16,19 @@ class CsvReader {
     public $offset=-1;
     public $delimiter=',';
     public $limit=-1;
-    
-    
+    /**
+     * Undocumented variable
+     *
+     * @var EventDispatcher
+     */
+    public $dispatcher;
+
+    public function __construct(){
+        $this->dispatcher = new EventDispatcher();
+    }
+    public function addListener($callable){
+        $this->dispatcher->addListener('row.read',$callable);
+    }
     public  function readCSVReturn(string $csvFilePath,callable $rowReaderObject=null)
     {
         $arrObjects=[];
@@ -45,16 +58,23 @@ class CsvReader {
                 $previous=$data;
                 continue;
               }
+              $rowRead= new RowRead();
+              $rowRead->index=$row;
+
               if (is_callable($rowReaderObject)) {
                   $object=$rowReaderObject($data, $num, $row);
                   if (null==$object) {
                       throw new Exception("Callable must return a value");
                   }
                   $arrObjects[]=  $object;
+                  
+                  $rowRead->data=$object;
               }else{
                   $arrObjects[]=  $data;
+                  $rowRead->data=$data;
+                  
               }
-             
+              $this->dispatcher->dispatch($rowRead,RowRead::NAME);
               $row++;
             }
             fclose($handle);
